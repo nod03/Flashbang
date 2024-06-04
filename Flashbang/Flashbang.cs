@@ -30,13 +30,21 @@ namespace Flashbang
         public const string PluginName = "Flashbang";
         public const string PluginVersion = "1.0.0";
 
+        public static PluginInfo pluginInfo;
+
         public RoR2.UI.HUD hud;
 
         public void Awake()
         {
+            pluginInfo = Info;
             Log.Init(Logger);
 
             On.RoR2.UI.HUD.Awake += GetHud;
+        }
+
+        public void Start()
+        {
+            SoundBanks.Init();
         }
 
         public void GetHud(On.RoR2.UI.HUD.orig_Awake orig, RoR2.UI.HUD self)
@@ -80,6 +88,7 @@ namespace Flashbang
                 opacity = 1;
                 StartCoroutine(Fade());
                 Log.Info("Flashbang!");
+                AkSoundEngine.PostEvent(1322173159, PlayerCharacterMasterController.instances[0].body.gameObject);
             }
             else
             {
