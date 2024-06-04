@@ -39,7 +39,6 @@ namespace Flashbang
             On.RoR2.UI.HUD.Awake += GetHud;
         }
 
-        GameObject Whitescreen;
         public void GetHud(On.RoR2.UI.HUD.orig_Awake orig, RoR2.UI.HUD self)
         {
             orig(self);
@@ -57,10 +56,11 @@ namespace Flashbang
             image.sprite = Sprite.Create(Texture2D.whiteTexture, new Rect(0, 0, 4, 4), Vector2.zero);
             image.GetComponent<RectTransform>().sizeDelta = new Vector2(500, 500);
             
-            ChangeWhitescreenAlpha(0);
+            SetWhitescreenAlpha(0);
         }
 
-        public void ChangeWhitescreenAlpha(float x)
+        GameObject Whitescreen;
+        public void SetWhitescreenAlpha(float x)
         {
             Whitescreen.GetComponent<Image>().color = new Color(1, 1, 1, x);
         }
@@ -69,14 +69,36 @@ namespace Flashbang
         {
             if (Input.GetKeyDown(KeyCode.F2))
             {
-                Log.Info("F2");
                 Bang();
             }
         }
 
         public void Bang()
         {
-            ChangeWhitescreenAlpha(1);
+            if (Whitescreen != null)
+            {
+                opacity = 1;
+                StartCoroutine(Fade());
+                Log.Info("Flashbang!");
+            }
+            else
+            {
+                Log.Warning("Tried to flashbang without whitescreen");
+            }
+        }
+
+        float opacity;
+        private IEnumerator Fade()
+        {
+            SetWhitescreenAlpha(opacity);
+            yield return new WaitForSeconds(1);
+            while (opacity > 0)
+            {
+                yield return new WaitForSeconds(0.01f);
+                opacity -= 0.01f;
+                SetWhitescreenAlpha(opacity);
+            }
+            
         }
     }
 }
