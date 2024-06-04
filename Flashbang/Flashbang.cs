@@ -52,9 +52,19 @@ namespace Flashbang
             orig(self);
             hud = self;
 
-            Whitescreen = new("Flashbang");
+            Dizzyscreen = new("Dizzyscreen");
+            Dizzyscreen.transform.SetParent(hud.mainContainer.transform);
+            RectTransform rectTransform = Dizzyscreen.AddComponent<RectTransform>();
+            rectTransform.anchorMin = Vector2.zero;
+            rectTransform.anchorMax = Vector2.one;
+            rectTransform.sizeDelta = Vector2.zero;
+            rectTransform.anchoredPosition = Vector2.zero;
+
+            Dizzyscreen.AddComponent<Image>();
+
+            Whitescreen = new("Whitescreen");
             Whitescreen.transform.SetParent(hud.mainContainer.transform);
-            RectTransform rectTransform = Whitescreen.AddComponent<RectTransform>();
+            rectTransform = Whitescreen.AddComponent<RectTransform>();
             rectTransform.anchorMin = Vector2.zero;
             rectTransform.anchorMax = Vector2.one;
             rectTransform.sizeDelta = Vector2.zero;
@@ -62,15 +72,16 @@ namespace Flashbang
 
             Image image = Whitescreen.AddComponent<Image>();
             image.sprite = Sprite.Create(Texture2D.whiteTexture, new Rect(0, 0, 4, 4), Vector2.zero);
-            image.GetComponent<RectTransform>().sizeDelta = new Vector2(500, 500);
-            
-            SetWhitescreenAlpha(0);
+
+            FlashAlpha(0);
         }
 
         GameObject Whitescreen;
-        public void SetWhitescreenAlpha(float x)
+        GameObject Dizzyscreen;
+        public void FlashAlpha(float x)
         {
             Whitescreen.GetComponent<Image>().color = new Color(1, 1, 1, x);
+            Dizzyscreen.GetComponent<Image>().color = new Color(1, 1, 1, x);
         }
 
         public void Update()
@@ -83,29 +94,33 @@ namespace Flashbang
 
         public void Bang()
         {
-            if (Whitescreen != null)
+            if (Whitescreen != null && Dizzyscreen != null)
             {
-                opacity = 1;
+                Texture2D buh = ScreenCapture.CaptureScreenshotAsTexture();
+                Dizzyscreen.GetComponent<Image>().sprite = Sprite.Create(buh, new Rect(0, 0, buh.width, buh.height), Vector2.zero);
+
                 StartCoroutine(Fade());
-                Log.Info("Flashbang!");
+                
                 AkSoundEngine.PostEvent(1322173159, PlayerCharacterMasterController.instances[0].body.gameObject);
+
+                Log.Info("Flashbang!");
             }
             else
             {
-                Log.Warning("Tried to flashbang without whitescreen");
+                Log.Warning("Bad flashbang...");
             }
         }
 
-        float opacity;
+        float alpha;
         private IEnumerator Fade()
         {
-            SetWhitescreenAlpha(opacity);
-            yield return new WaitForSeconds(1);
-            while (opacity > 0)
+            alpha = 1;
+            FlashAlpha(alpha);
+            while (alpha >= 0)
             {
-                yield return new WaitForSeconds(0.01f);
-                opacity -= 0.01f;
-                SetWhitescreenAlpha(opacity);
+                yield return new WaitForSeconds(0.04f);
+                alpha -= 0.01f * (2-alpha);
+                FlashAlpha(alpha);
             }
             
         }
