@@ -30,6 +30,8 @@ namespace Flashbang
 
     [BepInDependency(NetworkingAPI.PluginGUID)]
 
+    [BepInDependency(LanguageAPI.PluginGUID)]
+
     public class Flashbang : BaseUnityPlugin
     {
         public const string PluginGUID = PluginAuthor + "." + PluginName;
@@ -156,7 +158,12 @@ namespace Flashbang
             flashbang.pickupIconSprite = Assets.mainAssetBundle.LoadAsset<Sprite>("flashbang.png");
             flashbang.pickupModelPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/StunChanceOnHit/PickupStunGrenade.prefab").WaitForCompletion();
 
-            flashbang.cooldown = 30;
+            flashbang.appearsInMultiPlayer = true;
+            flashbang.appearsInSinglePlayer = true;
+            flashbang.canBeRandomlyTriggered = true;
+            flashbang.enigmaCompatible = true;
+            flashbang.canDrop = true;
+            flashbang.cooldown = 25;
 
             ItemAPI.Add(new CustomEquipment(flashbang, new ItemDisplayRuleDict(null)));
         }
@@ -180,7 +187,7 @@ namespace Flashbang
             foreach (CharacterBody x in CharacterBody.instancesList)
             {
                 double distance = Vector3.Distance(x.gameObject.transform.position, origin);
-                if (distance <= 60)
+                if (distance <= 80)
                 {
                     if (x.isPlayerControlled)
                     {
@@ -190,13 +197,12 @@ namespace Flashbang
                     {
                         DamageInfo boop = new()
                         {
-                            damage = (x.healthComponent.fullCombinedHealth/20) + 10,
+                            damage = Math.Max(x.healthComponent.fullCombinedHealth / 10, 50),
                             inflictor = body.gameObject,
                             attacker = body.gameObject,
-                            procCoefficient = 3
+                            procCoefficient = 0
                         };
                         x.healthComponent.TakeDamage(boop);
-
                         SetStateOnHurt.SetStunOnObject(x.gameObject, 5);
                     }
                 }

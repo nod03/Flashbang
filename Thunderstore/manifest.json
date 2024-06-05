@@ -1,8 +1,8 @@
 ﻿{
-	"name": "OutOfBoundsSafe",
-	"version_number": "1.0.1",
+	"name": "Flashbang",
+	"version_number": "1.0.0",
 	"website_url": "",
-	"description": "Allows you to exit the map bounds. Teleports you back if you fall through the floor.",
+	"description": "Adds a flashbang equipment.",
 	"dependencies": [
 		"bbepis-BepInExPack-5.4.2108",
 		"RiskofThunder-HookGenPatcher-1.2.3",

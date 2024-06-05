@@ -1,0 +1,8 @@
+{
+  "strings": {
+    "FLASHBANG_NAME": "Flashbang",
+    "FLASHBANG_PICKUP": "Think fast, chucklenuts",
+    "FLASHBANG_DESC": "Flashbangs everyone in proximity.",
+    "FLASHBANG_LORE": "Flashbang",
+  },
+}
