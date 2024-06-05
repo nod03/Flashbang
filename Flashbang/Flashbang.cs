@@ -18,12 +18,17 @@ using R2API.Networking.Interfaces;
 using R2API.Networking;
 using RoR2.Networking;
 using UnityEngine.UI;
+using EntityStates;
+using Facepunch.Steamworks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Flashbang
 {
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
 
     [BepInDependency(ItemAPI.PluginGUID)]
+
+    [BepInDependency(NetworkingAPI.PluginGUID)]
 
     public class Flashbang : BaseUnityPlugin
     {
@@ -34,10 +39,13 @@ namespace Flashbang
 
         public static PluginInfo pluginInfo;
 
+        public static Flashbang Instance;
+
         public void Awake()
         {
             pluginInfo = Info;
             Log.Init(Logger);
+            Instance = this;
 
             On.RoR2.UI.HUD.Awake += GetHud;
             On.RoR2.EquipmentSlot.PerformEquipmentAction += EquipmentActivate;
@@ -58,10 +66,6 @@ namespace Flashbang
 
         public void Update()
         {
-            if (Input.GetKeyDown(KeyCode.F2))
-            {
-                Bang();
-            }
         }
 
         private RoR2.UI.HUD hud;
@@ -78,7 +82,7 @@ namespace Flashbang
             rectTransform.sizeDelta = Vector2.zero;
             rectTransform.anchoredPosition = Vector2.zero;
 
-            Dizzyscreen.AddComponent<Image>();
+            Dizzyscreen.AddComponent<UnityEngine.UI.Image>();
 
             Whitescreen = new("Whitescreen");
             Whitescreen.transform.SetParent(hud.mainContainer.transform);
@@ -88,7 +92,7 @@ namespace Flashbang
             rectTransform.sizeDelta = Vector2.zero;
             rectTransform.anchoredPosition = Vector2.zero;
 
-            Image image = Whitescreen.AddComponent<Image>();
+            UnityEngine.UI.Image image = Whitescreen.AddComponent<UnityEngine.UI.Image>();
             image.sprite = Sprite.Create(Texture2D.whiteTexture, new Rect(0, 0, 4, 4), Vector2.zero);
 
             FlashAlpha(0);
@@ -98,19 +102,19 @@ namespace Flashbang
         private GameObject Dizzyscreen;
         private void FlashAlpha(float x)
         {
-            Whitescreen.GetComponent<Image>().color = new Color(1, 1, 1, x);
-            Dizzyscreen.GetComponent<Image>().color = new Color(1, 1, 1, x);
-        } 
+            Whitescreen.GetComponent<UnityEngine.UI.Image>().color = new UnityEngine.Color(1, 1, 1, x);
+            Dizzyscreen.GetComponent<UnityEngine.UI.Image>().color = new UnityEngine.Color(1, 1, 1, x);
+        }
 
-        private void Bang()
+        private void FlashbangPlayer()
         {
             if (Whitescreen != null && Dizzyscreen != null)
             {
                 Texture2D buh = ScreenCapture.CaptureScreenshotAsTexture();
-                Dizzyscreen.GetComponent<Image>().sprite = Sprite.Create(buh, new Rect(0, 0, buh.width, buh.height), Vector2.zero);
+                Dizzyscreen.GetComponent<UnityEngine.UI.Image>().sprite = Sprite.Create(buh, new Rect(0, 0, buh.width, buh.height), Vector2.zero);
 
                 StartCoroutine(Fade());
-                
+
                 AkSoundEngine.PostEvent(2753768932, Run.instance.gameObject);
 
                 Log.Info("Flashbang!");
@@ -129,10 +133,10 @@ namespace Flashbang
             while (alpha >= 0)
             {
                 yield return new WaitForSeconds(0.04f);
-                alpha -= 0.01f * (2-alpha);
+                alpha -= 0.01f * (2 - alpha);
                 FlashAlpha(alpha);
             }
-            
+
         }
 
         private EquipmentDef flashbang;
@@ -156,21 +160,67 @@ namespace Flashbang
 
         private bool EquipmentActivate(On.RoR2.EquipmentSlot.orig_PerformEquipmentAction orig, EquipmentSlot self, EquipmentDef def)
         {
-            if (def == flashbang)
+            if (def == flashbang && NetworkServer.active)
             {
-                try
-                {
-                    Bang();
-                    return true;
-                }
-                catch
-                {
-                    return false;
-                }
+                FireFlashbang(self.characterBody);
+                return true;
             }
             else
             {
                 return orig(self, def);
+            }
+        }
+
+        private void FireFlashbang(CharacterBody body)
+        {
+            Vector3 origin = body.corePosition;
+            foreach (CharacterBody x in CharacterBody.instancesList)
+            {
+                double distance = Vector3.Distance(x.corePosition, origin);
+                if (distance <= 100)
+                {
+                    if (x.isPlayerControlled)
+                    {
+                        Sink s = new Sink(x);
+                        NetMessageExtensions.Send(s, (NetworkDestination)1);
+                        s.OnReceived();
+                    }
+                    else
+                    {
+                        SetStateOnHurt.SetStunOnObject(x.gameObject, 8);
+                    }
+                }
+            }
+        }
+
+        
+        public class Sink : INetMessage, ISerializableObject
+        {
+            private NetworkInstanceId id;
+
+            public Sink() { }
+
+            public Sink(CharacterBody x)
+            {
+                id = x.master.networkIdentity.netId;
+            }
+
+            public void Serialize(NetworkWriter writer)
+            {
+                writer.Write(id);
+            }
+
+            public void Deserialize(NetworkReader reader)
+            {
+                id = reader.ReadNetworkId();
+            }
+
+            public void OnReceived()
+            {
+                foreach (PlayerCharacterMasterController x in PlayerCharacterMasterController.instances)
+                {
+                    if (x.master.networkIdentity.netId == id) { Instance.FlashbangPlayer(); }
+                }
             }
         }
     }
