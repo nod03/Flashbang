@@ -51,6 +51,8 @@ namespace Flashbang
             On.RoR2.EquipmentSlot.PerformEquipmentAction += EquipmentActivate;
 
             CreateEquipment();
+
+            NetworkingAPI.RegisterMessageType<Sink>();
         }
 
         public void OnDestroy()
@@ -181,9 +183,7 @@ namespace Flashbang
                 {
                     if (x.isPlayerControlled)
                     {
-                        Sink s = new Sink(x);
-                        NetMessageExtensions.Send(s, (NetworkDestination)1);
-                        s.OnReceived();
+                        NetMessageExtensions.Send(new Sink(x), (NetworkDestination)1);
                     }
                     else
                     {
@@ -217,9 +217,14 @@ namespace Flashbang
 
             public void OnReceived()
             {
-                foreach (PlayerCharacterMasterController x in PlayerCharacterMasterController.instances)
+                Log.Info($"Who is {id}");
+                
+                NetworkInstanceId self = LocalUserManager.GetFirstLocalUser().cachedMaster.networkIdentity.netId;
+                Log.Info($"I am {self}");
+                
+                if (id == self)
                 {
-                    if (x.master.networkIdentity.netId == id) { Instance.FlashbangPlayer(); }
+                    Instance.FlashbangPlayer();
                 }
             }
         }
