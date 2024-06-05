@@ -175,11 +175,11 @@ namespace Flashbang
 
         private void FireFlashbang(CharacterBody body)
         {
-            Vector3 origin = body.corePosition;
+            Vector3 origin = body.gameObject.transform.position;
             foreach (CharacterBody x in CharacterBody.instancesList)
             {
-                double distance = Vector3.Distance(x.corePosition, origin);
-                if (distance <= 100)
+                double distance = Vector3.Distance(x.gameObject.transform.position, origin);
+                if (distance <= 60)
                 {
                     if (x.isPlayerControlled)
                     {
@@ -187,7 +187,16 @@ namespace Flashbang
                     }
                     else
                     {
-                        SetStateOnHurt.SetStunOnObject(x.gameObject, 8);
+                        DamageInfo boop = new()
+                        {
+                            damage = (x.healthComponent.fullCombinedHealth/20) + 10,
+                            inflictor = body.gameObject,
+                            attacker = body.gameObject,
+                            procCoefficient = 3
+                        };
+                        x.healthComponent.TakeDamage(boop);
+
+                        SetStateOnHurt.SetStunOnObject(x.gameObject, 5);
                     }
                 }
             }
@@ -217,12 +226,7 @@ namespace Flashbang
 
             public void OnReceived()
             {
-                Log.Info($"Who is {id}");
-                
-                NetworkInstanceId self = LocalUserManager.GetFirstLocalUser().cachedMaster.networkIdentity.netId;
-                Log.Info($"I am {self}");
-                
-                if (id == self)
+                if (id == LocalUserManager.GetFirstLocalUser().cachedMaster.networkIdentity.netId)
                 {
                     Instance.FlashbangPlayer();
                 }
