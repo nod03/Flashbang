@@ -101,7 +101,7 @@ namespace Flashbang
 
                 StartCoroutine(Fade());
                 
-                AkSoundEngine.PostEvent(1322173159, PlayerCharacterMasterController.instances[0].body.gameObject);
+                AkSoundEngine.PostEvent(2753768932, Run.instance.gameObject);
 
                 Log.Info("Flashbang!");
             }

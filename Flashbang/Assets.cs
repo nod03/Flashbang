@@ -45,15 +45,15 @@ namespace Flashbang
                     $"Error code : {akResult}");
             }
 
-            AkSoundEngine.LoadBank("fade.bnk", out _);
+            AkSoundEngine.LoadBank("flashbang.bnk", out _);
             if (akResult == AKRESULT.AK_Success)
             {
-                Log.Info($"Added bank : {"fade.bnk"}");
+                Log.Info($"Added bank : {"flashbang.bnk"}");
             }
             else
             {
                 Log.Error(
-                    $"Error loading bank : {"fade.bnk"} " +
+                    $"Error loading bank : {"flashbang.bnk"} " +
                     $"Error code : {akResult}");
             }
         }
