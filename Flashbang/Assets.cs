@@ -8,12 +8,20 @@ namespace Flashbang
 {
     public static class Assets
     {
+
+        public static AssetBundle mainAssetBundle = null;
+        internal static string assetBundleName = "flashbang";
         internal static string assemblyDir
         {
             get
             {
                 return Path.GetDirectoryName(Flashbang.pluginInfo.Location);
             }
+        }
+
+        public static void PopulateAssets()
+        {
+            mainAssetBundle = AssetBundle.LoadFromFile(Path.Combine(assemblyDir, assetBundleName));
         }
     }
 

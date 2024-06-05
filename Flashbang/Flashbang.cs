@@ -45,6 +45,7 @@ namespace Flashbang
         {
             pluginInfo = Info;
             Log.Init(Logger);
+            Assets.PopulateAssets();
             Instance = this;
 
             On.RoR2.UI.HUD.Awake += GetHud;
@@ -152,8 +153,8 @@ namespace Flashbang
             flashbang.descriptionToken = "FLASHBANG_DESC";
             flashbang.loreToken = "FLASHBANG_LORE";
 
-            flashbang.pickupIconSprite = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/Common/MiscIcons/texMysteryIcon.png").WaitForCompletion();
-            flashbang.pickupModelPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Mystery/PickupMystery.prefab").WaitForCompletion();
+            flashbang.pickupIconSprite = Assets.mainAssetBundle.LoadAsset<Sprite>("flashbang.png");
+            flashbang.pickupModelPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/StunChanceOnHit/PickupStunGrenade.prefab").WaitForCompletion();
 
             flashbang.cooldown = 30;
 
