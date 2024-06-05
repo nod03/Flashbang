@@ -23,6 +23,8 @@ namespace Flashbang
 {
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
 
+    [BepInDependency(ItemAPI.PluginGUID)]
+
     public class Flashbang : BaseUnityPlugin
     {
         public const string PluginGUID = PluginAuthor + "." + PluginName;
@@ -32,14 +34,21 @@ namespace Flashbang
 
         public static PluginInfo pluginInfo;
 
-        public RoR2.UI.HUD hud;
-
         public void Awake()
         {
             pluginInfo = Info;
             Log.Init(Logger);
 
             On.RoR2.UI.HUD.Awake += GetHud;
+            On.RoR2.EquipmentSlot.PerformEquipmentAction += EquipmentActivate;
+
+            CreateEquipment();
+        }
+
+        public void OnDestroy()
+        {
+            On.RoR2.UI.HUD.Awake -= GetHud;
+            On.RoR2.EquipmentSlot.PerformEquipmentAction -= EquipmentActivate;
         }
 
         public void Start()
@@ -47,7 +56,16 @@ namespace Flashbang
             SoundBanks.Init();
         }
 
-        public void GetHud(On.RoR2.UI.HUD.orig_Awake orig, RoR2.UI.HUD self)
+        public void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.F2))
+            {
+                Bang();
+            }
+        }
+
+        private RoR2.UI.HUD hud;
+        private void GetHud(On.RoR2.UI.HUD.orig_Awake orig, RoR2.UI.HUD self)
         {
             orig(self);
             hud = self;
@@ -76,23 +94,15 @@ namespace Flashbang
             FlashAlpha(0);
         }
 
-        GameObject Whitescreen;
-        GameObject Dizzyscreen;
-        public void FlashAlpha(float x)
+        private GameObject Whitescreen;
+        private GameObject Dizzyscreen;
+        private void FlashAlpha(float x)
         {
             Whitescreen.GetComponent<Image>().color = new Color(1, 1, 1, x);
             Dizzyscreen.GetComponent<Image>().color = new Color(1, 1, 1, x);
-        }
+        } 
 
-        public void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.F2))
-            {
-                Bang();
-            }
-        }
-
-        public void Bang()
+        private void Bang()
         {
             if (Whitescreen != null && Dizzyscreen != null)
             {
@@ -111,7 +121,7 @@ namespace Flashbang
             }
         }
 
-        float alpha;
+        private float alpha;
         private IEnumerator Fade()
         {
             alpha = 1;
@@ -123,6 +133,45 @@ namespace Flashbang
                 FlashAlpha(alpha);
             }
             
+        }
+
+        private EquipmentDef flashbang;
+        private void CreateEquipment()
+        {
+            flashbang = ScriptableObject.CreateInstance<EquipmentDef>();
+
+            flashbang.name = "FLASHBANG_NAME";
+            flashbang.nameToken = "FLASHBANG_NAME";
+            flashbang.pickupToken = "FLASHBANG_PICKUP";
+            flashbang.descriptionToken = "FLASHBANG_DESC";
+            flashbang.loreToken = "FLASHBANG_LORE";
+
+            flashbang.pickupIconSprite = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/Common/MiscIcons/texMysteryIcon.png").WaitForCompletion();
+            flashbang.pickupModelPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Mystery/PickupMystery.prefab").WaitForCompletion();
+
+            flashbang.cooldown = 30;
+
+            ItemAPI.Add(new CustomEquipment(flashbang, new ItemDisplayRuleDict(null)));
+        }
+
+        private bool EquipmentActivate(On.RoR2.EquipmentSlot.orig_PerformEquipmentAction orig, EquipmentSlot self, EquipmentDef def)
+        {
+            if (def == flashbang)
+            {
+                try
+                {
+                    Bang();
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return orig(self, def);
+            }
         }
     }
 }
