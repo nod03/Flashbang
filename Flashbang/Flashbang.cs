@@ -189,20 +189,29 @@ namespace Flashbang
                 double distance = Vector3.Distance(x.gameObject.transform.position, origin);
                 if (distance <= 80)
                 {
+                    // Players
                     if (x.isPlayerControlled)
                     {
                         NetMessageExtensions.Send(new Sink(x), (NetworkDestination)1);
                     }
-                    else
+                    // Enemies
+                    else if (x.teamComponent.teamIndex != body.teamComponent.teamIndex)
                     {
                         DamageInfo boop = new()
                         {
-                            damage = Math.Max(x.healthComponent.fullCombinedHealth / 10, 50),
-                            inflictor = body.gameObject,
+                            damage = Math.Max(x.healthComponent.fullCombinedHealth / 10, body.baseDamage * 1.5f),
+                            //inflictor = body.gameObject,
                             attacker = body.gameObject,
-                            procCoefficient = 0
+                            crit = Util.CheckRoll(body.crit, body.master),
+                            procCoefficient = 3f
                         };
                         x.healthComponent.TakeDamage(boop);
+                        GlobalEventManager.instance.OnHitEnemy(boop, x.healthComponent.gameObject);
+                        SetStateOnHurt.SetStunOnObject(x.gameObject, 5);
+                    }
+                    // Allies
+                    else
+                    {
                         SetStateOnHurt.SetStunOnObject(x.gameObject, 5);
                     }
                 }
