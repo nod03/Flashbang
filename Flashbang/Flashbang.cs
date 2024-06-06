@@ -130,6 +130,12 @@ namespace Flashbang
             }
         }
 
+        private void BangPlayer(NetworkInstanceId sourceId)
+        {
+            CharacterMaster source = CharacterMaster.instancesList.Find((CharacterMaster x) => x.networkIdentity.netId == sourceId);
+            AkSoundEngine.PostEvent(2315197877, source.GetBody().gameObject);
+        }
+
         private float alpha;
         private IEnumerator Fade()
         {
@@ -187,15 +193,15 @@ namespace Flashbang
             foreach (CharacterBody x in CharacterBody.instancesList)
             {
                 double distance = Vector3.Distance(x.gameObject.transform.position, origin);
-                if (distance <= 80)
+                // Players
+                if (x.isPlayerControlled)
                 {
-                    // Players
-                    if (x.isPlayerControlled)
-                    {
-                        NetMessageExtensions.Send(new Sink(x), (NetworkDestination)1);
-                    }
+                    NetMessageExtensions.Send(new Sink(x.master.networkIdentity.netId, body.master.networkIdentity.netId, distance <= 80), (NetworkDestination)1);
+                }
+                else if (distance <= 80)
+                {
                     // Enemies
-                    else if (x.teamComponent.teamIndex != body.teamComponent.teamIndex)
+                    if (x.teamComponent.teamIndex != body.teamComponent.teamIndex)
                     {
                         DamageInfo boop = new()
                         {
@@ -221,30 +227,45 @@ namespace Flashbang
         
         public class Sink : INetMessage, ISerializableObject
         {
-            private NetworkInstanceId id;
+            private NetworkInstanceId playerId;
+            private NetworkInstanceId sourceId;
+            private bool withinRange;
 
             public Sink() { }
 
-            public Sink(CharacterBody x)
+            public Sink(NetworkInstanceId playerId, NetworkInstanceId sourceId, bool withinRange)
             {
-                id = x.master.networkIdentity.netId;
+                this.playerId = playerId;
+                this.sourceId = sourceId;
+                this.withinRange = withinRange;
             }
 
             public void Serialize(NetworkWriter writer)
             {
-                writer.Write(id);
+                writer.Write(playerId);
+                writer.Write(sourceId);
+                writer.Write(withinRange);
             }
 
             public void Deserialize(NetworkReader reader)
             {
-                id = reader.ReadNetworkId();
+                playerId = reader.ReadNetworkId();
+                sourceId = reader.ReadNetworkId();
+                withinRange = reader.ReadBoolean();
             }
 
             public void OnReceived()
             {
-                if (id == LocalUserManager.GetFirstLocalUser().cachedMaster.networkIdentity.netId)
+                if (playerId == LocalUserManager.GetFirstLocalUser().cachedMaster.networkIdentity.netId)
                 {
-                    Instance.FlashbangPlayer();
+                    if (withinRange)
+                    {
+                        Instance.FlashbangPlayer();
+                    }
+                    else
+                    {
+                        Instance.BangPlayer(sourceId); // hahaha
+                    }
                 }
             }
         }
