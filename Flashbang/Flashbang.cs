@@ -64,19 +64,11 @@ namespace Flashbang
             On.RoR2.EquipmentSlot.PerformEquipmentAction -= EquipmentActivate;
         }
 
-        public void Start()
-        {
-            SoundBanks.Init();
-        }
-
-        public void Update()
-        {
-        }
-
         private RoR2.UI.HUD hud;
         private void GetHud(On.RoR2.UI.HUD.orig_Awake orig, RoR2.UI.HUD self)
         {
             orig(self);
+            SoundBanks.Init(); // fancy meeting you here
             hud = self;
 
             Dizzyscreen = new("Dizzyscreen");

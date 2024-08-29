@@ -1,0 +1,12 @@
+Event	ID	Name			Wwise Object Path	Notes
+	1375974412	Play_bang			\Default Work Unit\Play_bang	
+	2315197877	Play_banglocal			\Default Work Unit\Play_banglocal	
+	2753768932	Play_ring			\Default Work Unit\Play_ring	
+
+Game Parameter	ID	Name			Wwise Object Path	Notes
+	3673881719	Volume_SFX			\Default Work Unit\Volume_SFX	
+
+In Memory Audio	ID	Name	Audio source file		Wwise Object Path	Notes	Data Size
+	425406715	bang	C:\Users\alex\Documents\WwiseProjects\flashbaang\.cache\Windows\SFX\bang_EDCD4836.wem		\Actor-Mixer Hierarchy\Default Work Unit\SFX Mixer\bang		24863
+	500934561	ring	C:\Users\alex\Documents\WwiseProjects\flashbaang\.cache\Windows\SFX\ring_EDCD4836.wem		\Actor-Mixer Hierarchy\Default Work Unit\SFX Mixer\ring		37734
+
